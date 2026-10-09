@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 默认的 dark: 跟随系统，这里改成受 .dark 类控制，方便做手动切换 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
