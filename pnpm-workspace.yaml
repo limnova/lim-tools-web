@@ -1,0 +1,4 @@
+allowBuilds:
+  # This script only checks downstream version ranges; the browser runtime
+  # ships prebuilt and does not require install-time execution.
+  protobufjs: false

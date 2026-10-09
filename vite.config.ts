@@ -11,4 +11,7 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  server: {
+    proxy: { '/api': { target: process.env.LIM_TOOLS_API_TARGET || 'http://127.0.0.1:8080', changeOrigin: true } },
+  },
 })

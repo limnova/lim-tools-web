@@ -1,98 +1,71 @@
-import { ActionStateDemo } from './components/ActionStateDemo'
-import { Card } from './components/Card'
-import { OptimisticDemo } from './components/OptimisticDemo'
-import { RefAsPropDemo } from './components/RefAsPropDemo'
-import { ThemeToggle } from './components/ThemeToggle'
-import { TransitionDemo } from './components/TransitionDemo'
-import { UseDemo } from './components/UseDemo'
+import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
+import { errorMessage, workbooks } from './lib/workbooks'
+import type { Workbook } from './lib/workbooks'
+import { WorkbookLibrary } from './components/WorkbookLibrary'
+import { SheetMark } from './components/Icon'
+
+const WorkbookEditor = lazy(() => import('./components/WorkbookEditor'))
+
+function routeId() {
+  return window.location.hash.match(/^#\/workbooks\/([a-f0-9]{32})$/)?.[1] || null
+}
+
+class EditorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error('Spreadsheet initialization failed', error, info.componentStack) }
+  render() {
+    return this.state.failed ? <div className="app-loading"><SheetMark large /><p>表格编辑器加载失败，请刷新后重试。</p><button className="button" onClick={() => window.location.reload()}>刷新页面</button></div> : this.props.children
+  }
+}
 
 export default function App() {
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      {/* React 19：<title> / <meta> 可以直接写在组件里，会提升到 <head> */}
-      <title>Lim Tools Web</title>
-      <meta
-        name="description"
-        content="Lim Tools 前端：Vite + React 19 + Tailwind CSS v4"
-      />
+  const [id, setId] = useState(routeId)
+  const currentId = useRef(id)
+  const leaveGuard = useRef<(() => Promise<boolean>) | null>(null)
+  const [resource, setResource] = useState<{ id: string; book?: Workbook; error?: string } | null>(null)
 
-      <main className="mx-auto flex max-w-5xl flex-col gap-8 px-6 py-12">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold">Lim Tools Web</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Vite 8 · React 19 · TypeScript 6 · Tailwind CSS v4 · React Compiler
-            </p>
-          </div>
-          <ThemeToggle />
-        </header>
+  useEffect(() => {
+    let navigation = 0
+    const onHashChange = async () => {
+      const target = routeId()
+      if (target === currentId.current) return
+      const request = ++navigation
+      if (leaveGuard.current && !await leaveGuard.current()) {
+        if (request === navigation) window.history.replaceState(null, '', currentId.current ? `#/workbooks/${currentId.current}` : '#')
+        return
+      }
+      if (request !== navigation) return
+      currentId.current = target
+      setResource(null)
+      setId(target)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
-        <div className="grid gap-5 md:grid-cols-2">
-          <Card
-            title="ref 当普通 prop"
-            api="ref"
-            description="不再需要 forwardRef，直接声明 ref?: Ref<HTMLInputElement> 即可。"
-          >
-            <RefAsPropDemo />
-          </Card>
+  useEffect(() => {
+    if (!id) return
+    const controller = new AbortController()
+    workbooks.get(id, controller.signal).then(book => setResource({ id, book })).catch(error => {
+      if (!controller.signal.aborted) setResource({ id, error: errorMessage(error) })
+    })
+    return () => controller.abort()
+  }, [id])
 
-          <Card
-            title="表单 action + useActionState"
-            api="useActionState"
-            description="action 直接接 async 函数，pending 和返回值都由 React 托管。"
-          >
-            <ActionStateDemo />
-          </Card>
+  function open(target: string | null) { window.location.hash = target ? `/workbooks/${target}` : '' }
+  function registerGuard(guard: (() => Promise<boolean>) | null) { leaveGuard.current = guard }
 
-          <Card
-            title="乐观更新"
-            api="useOptimistic"
-            description="提交的瞬间就上屏，等真实结果回来再落定。"
-          >
-            <OptimisticDemo />
-          </Card>
+  const book = resource?.id === id ? resource.book : undefined
+  const error = resource?.id === id ? resource.error : undefined
 
-          <Card
-            title="在渲染里读 Promise"
-            api="use + Suspense"
-            description="use() 读取 Promise，配合 Suspense 显示加载态。"
-          >
-            <UseDemo />
-          </Card>
-
-          <Card
-            title="不阻塞输入的重活"
-            api="useTransition + useDeferredValue"
-            description="生成大列表放进 transition，筛选走延后的值。"
-          >
-            <TransitionDemo />
-          </Card>
-
-          <Card
-            title="React Compiler"
-            api="compiler: true"
-            description="构建期自动记忆化，上面这些组件一行 useMemo / useCallback 都没写。"
-          >
-            <ul className="flex flex-col gap-1.5 text-slate-600 dark:text-slate-300">
-              <li>· 组件与 Hook 的依赖由编译器推导，不再是手工维护</li>
-              <li>· 关闭开关只需把 vite.config.ts 里的 compiler 改为 false</li>
-              <li>· 违反 Hook 规则的写法会在构建时报错，而不是静默失效</li>
-            </ul>
-          </Card>
-        </div>
-
-        <footer className="border-t border-slate-200 pt-5 text-sm text-slate-400 dark:border-slate-800 dark:text-slate-500">
-          聚合仓库：
-          <a
-            className="text-sky-600 hover:underline dark:text-sky-400"
-            href="https://github.com/limnova/lim-tools-group"
-            target="_blank"
-            rel="noreferrer"
-          >
-            lim-tools-group
-          </a>
-        </footer>
-      </main>
-    </div>
-  )
+  return <>
+    {!book && <title>Lim 表格</title>}
+    <meta name="description" content="Lim 在线表格：编辑数据、使用公式、管理工作表并自动保存。" />
+    {!id ? <WorkbookLibrary onOpen={open} />
+      : error ? <div className="app-loading"><SheetMark large /><p role="alert">{error}</p><div className="dialog-actions"><button className="button" onClick={() => open(null)}>返回我的表格</button><button className="button primary" onClick={() => window.location.reload()}>重新加载</button></div></div>
+        : book ? <EditorBoundary key={book.id}><Suspense fallback={<div className="app-loading" role="status"><SheetMark large /><p>正在加载表格编辑器…</p></div>}><WorkbookEditor book={book} onOpen={open} registerGuard={registerGuard} /></Suspense></EditorBoundary>
+          : <div className="app-loading" role="status"><SheetMark large /><p>正在打开表格…</p></div>}
+  </>
 }
