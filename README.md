@@ -24,6 +24,18 @@ pnpm preview    # 预览构建产物
 pnpm lint       # oxlint
 ```
 
+## 浏览器回归检查
+
+先运行 `pnpm dev --host 127.0.0.1`，另一个终端执行（需要 Python 和 uv）：
+
+```bash
+uv run --with playwright python -m playwright install chromium
+uv run --with playwright python tests/browser_smoke.py
+```
+
+使用其他端口时添加 `--url http://127.0.0.1:5179`。检查包含表单成功/失败、
+异步加载、筛选、主题持久化，以及重复发送消息和发送期间草稿保留。
+
 ## 目录结构
 
 ```

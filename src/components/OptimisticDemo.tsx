@@ -1,4 +1,4 @@
-import { useOptimistic, useRef, useState } from 'react'
+import { startTransition, useOptimistic, useState } from 'react'
 import { sleep } from '../lib/api'
 import { buttonClass, inputClass } from './Card'
 
@@ -15,31 +15,41 @@ const INITIAL_MESSAGES: Message[] = [
 
 export function OptimisticDemo() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES)
-  const formRef = useRef<HTMLFormElement>(null)
+  const [text, setText] = useState('')
 
   const [optimisticMessages, addOptimisticMessage] = useOptimistic(
     messages,
-    (current: Message[], text: string) => [
-      ...current,
-      { id: `pending-${text}`, text, pending: true },
-    ],
+    (current: Message[], message: Message) =>
+      current.some((item) => item.id === message.id)
+        ? current
+        : [...current, { ...message, pending: true }],
   )
 
   async function send(formData: FormData) {
-    const text = String(formData.get('text') ?? '').trim()
-    if (!text) return
+    const submittedText = String(formData.get('text') ?? '').trim()
+    if (!submittedText) return
 
-    addOptimisticMessage(text) // 先上屏，不等网络
-    formRef.current?.reset()
+    const message: Message = { id: crypto.randomUUID(), text: submittedText }
+    addOptimisticMessage(message) // 同一条消息在确认前后沿用同一个 ID
+    setText('')
 
     await sleep(1200) // 模拟一次请求往返
-    setMessages((current) => [...current, { id: crypto.randomUUID(), text }])
+    startTransition(() => {
+      setMessages((current) => [...current, message])
+    })
   }
 
   return (
-    <form ref={formRef} action={send} className="flex flex-col gap-3">
+    <form action={send} className="flex flex-col gap-3">
       <div className="flex gap-2">
-        <input name="text" placeholder="说点什么" className={inputClass} />
+        <input
+          name="text"
+          aria-label="消息内容"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          placeholder="说点什么"
+          className={inputClass}
+        />
         <button type="submit" className={buttonClass}>
           发送
         </button>
