@@ -65,9 +65,10 @@ def wait_book(context, id, predicate, timeout=15):
 
 
 def download(page, name):
-    page.locator('.export-menu summary').filter(has_text='导出').click()
+    page.locator('.export-menu').click()
     with page.expect_download() as pending:
-        page.get_by_role('button', name=name).click()
+        # antd Dropdown renders its entries as menu items, not buttons.
+        page.get_by_role('menuitem', name=name).click()
     result = pending.value
     path = artifacts / result.suggested_filename
     result.save_as(path)
@@ -157,12 +158,12 @@ with sync_playwright() as p:
         page.keyboard.press('Control+v')
         wait_book(context, id, lambda book: value(book,1,0,'数据处理')==3 and value(book,3,1,'数据处理')=='乙')
         select(page, 'A2:B4')
-        page.locator('.data-tools summary').click()
-        page.get_by_role('button', name='按选区首列升序').click()
+        page.locator('.data-tools').get_by_role('button', name='数据').click()
+        page.get_by_role('menuitem', name='按选区首列升序').click()
         wait_book(context, id, lambda book: value(book,1,0,'数据处理')==1 and value(book,3,0,'数据处理')==3)
         select(page, 'A1:B4')
-        page.locator('.data-tools summary').click()
-        page.get_by_role('button', name='开启 / 关闭筛选').click()
+        page.locator('.data-tools').get_by_role('button', name='数据').click()
+        page.get_by_role('menuitem', name='开启 / 关闭筛选').click()
         filtered = wait_book(context, id, lambda book: any(resource['name']=='SHEET_FILTER_PLUGIN' and any(item.get('ref', {}).get('endRow')==3 for item in json.loads(resource['data'] or '{}').values()) for resource in book['snapshot'].get('resources',[])))
         page.get_by_role('tab', name='数据处理', exact=True).click(button='right')
         page.get_by_role('button', name='复制', exact=True).click()
@@ -217,8 +218,9 @@ with sync_playwright() as p:
         page.route(pattern, fail_save)
         enter(page, 'A15', '断网草稿')
         expect(page.locator('.save-status')).to_contain_text('保存失败', timeout=10000)
-        page.once('dialog', lambda dialog: dialog.dismiss())
         page.get_by_role('button', name='返回我的表格', exact=True).click()
+        # The unsaved-changes guard is an antd Modal now, not a native confirm.
+        page.get_by_role('dialog').get_by_role('button', name='留在本页', exact=True).click()
         expect(page).to_have_url(re.compile(f'#/workbooks/{id}$'))
         expect(page.get_by_role('textbox', name='表格名称', exact=True)).to_be_visible()
         page.unroute(pattern, fail_save)
