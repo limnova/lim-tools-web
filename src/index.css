@@ -24,8 +24,8 @@ body { margin: 0; }
 .page-heading h1 { margin: 0 0 9px; font-size: 28px; font-weight: 650; letter-spacing: -.8px; }
 .page-heading p { margin: 0; color: #64748b; font-size: 14px; }
 .start-options { display: flex; gap: 20px; margin: 32px 0 40px; }
-.start-option { display: flex; align-items: center; text-align: left; gap: 18px; width: 320px; padding: 22px; border: 1px solid #dce4e9; border-radius: 8px; background: #fff; }
-.start-option:hover { border-color: #8db9a5; background: #fbfdfc; }
+.start-option { height: auto; width: 320px; padding: 22px; }
+.start-option-content { display: flex; align-items: center; text-align: left; gap: 18px; width: 100%; white-space: normal; }
 .start-option .start-arrow { margin-left: auto; color: #91a2ab; }
 .start-option strong { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 600; }
 .start-option small { font-size: 12px; color: #64748b; }
@@ -38,30 +38,18 @@ body { margin: 0; }
 .count { margin-left: 5px; color: #8693a2; font-size: 13px; font-weight: 400; }
 .list-actions { display: flex; gap: 10px; align-items: center; }
 .list-actions > .search-field { width: 220px; }
+.list-actions > .file-upload { flex: 0 0 auto; width: auto; }
 .library-main .notice { margin-bottom: 18px; }
-.file-list { background: #fff; border: 1px solid #e1e6ed; border-radius: 8px; overflow: hidden; }
-/* Heading and rows share the same flex slots (mark / name / time / actions) so
-   the column labels stay aligned with the data below them. */
-.file-list-heading { display: flex; align-items: center; gap: 14px; min-height: 42px; padding: 0 24px; background: #fafbfd; border-bottom: 1px solid #e9edf2; color: #8693a2; font-size: 12px; }
-.file-heading-mark { flex: 0 0 34px; }
-.file-heading-name { flex: 1; min-width: 0; }
-.file-heading-time, .file-list .file-row time { flex: 0 0 130px; }
-.file-heading-actions { flex: 0 0 36px; }
-/* Scoped above .ant-listy-item so the row layout wins over the library's own
-   row padding. */
-.file-list .file-row { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 0 24px; border-bottom: 1px solid #edf0f4; }
-.file-list .file-row:last-child { border-bottom: 0; }
-.file-open { flex: 1; min-width: 0; padding: 0; color: #253648; background: transparent; font-size: 14px; font-weight: 500; text-align: left; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.file-open:hover { color: #1b6b54; }
-.file-delete { flex: 0 0 36px; width: 36px; padding: 0; }
-.file-delete:hover { color: #c13d3d; }
+.file-list { border: 1px solid #e1e6ed; border-radius: 8px; overflow: hidden; }
+.file-name { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.file-open { min-width: 0; max-width: calc(100% - 48px); height: auto; padding: 0; text-align: left; }
+.file-open-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .file-list .file-row time { color: #7c8b9b; font-size: 12px; }
 .file-hint { color: #8693a2; font-size: 12px; margin-top: 18px; }
 .library-footer { display: flex; justify-content: space-between; width: min(1060px, calc(100% - 80px)); padding: 40px 0 25px; margin: 0 auto; color: #9aa7b4; font-size: 12px; }
 .empty-state { display: flex; align-items: center; flex-direction: column; justify-content: center; min-height: 265px; padding: 32px 24px; border: 1px dashed #dce4e9; border-radius: 8px; background: #ffffffa3; }
 .empty-state h2 { margin: 20px 0 8px; font-size: 17px; font-weight: 500; }
 .empty-state p { margin: 0 0 15px; color: #7c8b9b; font-size: 13px; text-align: center; }
-.start-option:focus-visible, .file-open:focus-visible { outline: 2px solid #1b6b54; outline-offset: 3px; }
 
 .app-loading { min-height: 100dvh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; padding: 30px; text-align: center; color: #64748b; font-size: 14px; }
 .app-loading p { margin: 0; }
@@ -84,10 +72,7 @@ body { margin: 0; }
 .data-tools > span { margin-left: auto; font-size: 11px; color: #8a98a6; }
 .sheet-instance { width: 100%; height: 100%; }
 
-.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-.shortcut-list { margin: 20px 0; font-size: 13px; }
-.shortcut-list > div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #edf0f4; }
-.shortcut-list dd { margin: 0; color: #7c8b9b; }
+.shortcut-list { margin: 20px 0; }
 .muted { color: #7c8b9b; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
@@ -98,7 +83,8 @@ body { margin: 0; }
   .page-heading h1 { font-size: 24px; }
   .page-heading p { font-size: 12px; }
   .start-options { gap: 12px; margin: 25px 0 30px; }
-  .start-option { width: 50%; padding: 16px 12px; gap: 10px; flex-wrap: wrap; }
+  .start-option { width: 50%; padding: 16px 12px; }
+  .start-option-content { gap: 10px; align-items: flex-start; flex-direction: column; }
   .start-option .start-arrow { display: none; }
   .start-option strong { font-size: 13px; }
   .start-option small { font-size: 11px; }
@@ -106,7 +92,6 @@ body { margin: 0; }
   .list-tools { flex-wrap: wrap; }
   .list-actions { width: 100%; }
   .list-actions > .search-field { flex: 1; min-width: 0; width: auto; }
-  .file-row time { display: none; }
   .library-footer { width: calc(100% - 36px); }
   .editor-header { min-height: 64px; gap: 8px; padding: 10px 8px; }
   .editor-header > .sheet-mark { display: none; }

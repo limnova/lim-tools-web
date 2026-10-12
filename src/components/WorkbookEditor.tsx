@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
-import { Alert, App as AntdApp, Button, Dropdown, Input, Space } from 'antd'
+import { Alert, App as AntdApp, Button, Descriptions, Dropdown, Input, Modal, Space } from 'antd'
 import { ArrowLeftOutlined, CheckOutlined, ClockCircleOutlined, DownloadOutlined, QuestionCircleOutlined, SearchOutlined } from '@ant-design/icons'
 import type { Workbook } from '../lib/workbooks'
 import { errorMessage, workbooks } from '../lib/workbooks'
@@ -7,7 +7,6 @@ import { downloadFile, sheetCsv, workbookBackup } from '../lib/files'
 import { useWorkbookSave } from '../lib/useWorkbookSave'
 import Spreadsheet from './Spreadsheet'
 import type { SpreadsheetHandle } from './Spreadsheet'
-import { Dialog } from './Dialog'
 import { SheetMark } from './SheetMark'
 
 interface Props {
@@ -144,6 +143,16 @@ export default function WorkbookEditor({ book, onOpen, registerGuard }: Props) {
       { key: 'filter', label: <>开启 / 关闭筛选<small>选中含标题行的数据范围</small></>, disabled: !ready || busy, onClick: () => void dataAction('toggleFilter') },
     ] }}><Button variant="text" disabled={!ready || busy}>数据</Button></Dropdown><Button variant="text" disabled={!ready || busy} icon={<SearchOutlined aria-hidden />} onClick={() => void dataAction('findReplace')}>查找与替换</Button><span>选择数据范围后操作</span></nav>
     <div className="sheet-stage" inert={busy}><Spreadsheet initialSnapshot={book.snapshot} onReady={onReady} onChange={save.changed} onEditing={save.changeEditing} /></div>
-    {help && <Dialog title="使用表格" onClose={() => setHelp(false)}><p>双击单元格或直接输入开始编辑，按 Enter 确认。输入 <code>=SUM(A1:A10)</code> 等公式即可计算。</p><dl className="shortcut-list"><div><dt>复制 / 粘贴</dt><dd>Ctrl / ⌘ + C / V</dd></div><div><dt>撤销 / 重做</dt><dd>Ctrl / ⌘ + Z / Shift + Z</dd></div><div><dt>立即保存</dt><dd>Ctrl / ⌘ + S</dd></div><div><dt>查找与替换</dt><dd>Ctrl / ⌘ + F</dd></div></dl><p>右键行列标题可以插入、删除或冻结行列。底部「+」新建工作表，右键工作表标签可以重命名或复制。</p><p className="muted">修改会自动保存到服务端。CSV 只导出当前工作表的值；JSON 备份可完整恢复。当前版本供单人编辑使用。</p><div className="dialog-actions"><Button variant="solid" color="primary" onClick={() => setHelp(false)}>知道了</Button></div></Dialog>}
+    <Modal title="使用表格" open={help} centered onCancel={() => setHelp(false)}
+      footer={<Button variant="solid" color="primary" onClick={() => setHelp(false)}>知道了</Button>}
+    ><p>双击单元格或直接输入开始编辑，按 Enter 确认。输入 <code>=SUM(A1:A10)</code> 等公式即可计算。</p>
+      <Descriptions className="shortcut-list" column={1} size="small" items={[
+        { key: 'clipboard', label: '复制 / 粘贴', children: 'Ctrl / ⌘ + C / V' },
+        { key: 'history', label: '撤销 / 重做', children: 'Ctrl / ⌘ + Z / Shift + Z' },
+        { key: 'save', label: '立即保存', children: 'Ctrl / ⌘ + S' },
+        { key: 'find', label: '查找与替换', children: 'Ctrl / ⌘ + F' },
+      ]} />
+      <p>右键行列标题可以插入、删除或冻结行列。底部「+」新建工作表，右键工作表标签可以重命名或复制。</p><p className="muted">修改会自动保存到服务端。CSV 只导出当前工作表的值；JSON 备份可完整恢复。当前版本供单人编辑使用。</p>
+    </Modal>
   </main>
 }
